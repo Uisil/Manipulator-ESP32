@@ -4,7 +4,10 @@
 #include <string.h>
 #include <HardwareSerial.h>
 
+#define COMMAND_SIZE 4
+
 void connectingInit();
+void transMessage(String header, String message);
 
 const char* ssid     = "dlink_DWR-932_0048";
 const char* password = "DFeyg56489";
@@ -27,8 +30,10 @@ void setup()
 
 }
 
+//ZMIENNE GLOBALNE
 int value = 0;
-unsigned char buffer[8];
+unsigned char buffer[COMMAND_SIZE+1]; //taki rozmiar ponieważ najdłuzsza komenda 4 bajty + znak '\0'
+
 void loop(){
  WiFiClient client = server.available();  // listen for incoming clients
   if(WiFi.status() == WL_CONNECTED)
@@ -65,11 +70,13 @@ void loop(){
       }
       if(messLineNumber == 10)
       {
+
         break;
       }
     }
     Serial.println(header);
     Serial.println(message);
+    transMessage(header,message);
     SerialPort.print(message);
 
     // close the connection:
@@ -86,7 +93,7 @@ void loop(){
 
 void connectingInit()
 {
-      Serial.println();
+    Serial.println();
     Serial.println();
     Serial.print("Connecting to ");
     Serial.println(ssid);
@@ -104,4 +111,50 @@ void connectingInit()
     Serial.println(WiFi.localIP());
     
     server.begin();
+}
+
+void transMessage(String header, String  message)
+{
+  /* funkcja odpowiadająca za tłuamczenie
+  *  wiadomości HTML na użyteczne dane 
+  */
+
+  
+  if(header == "POST /gripper/ON HTTP/1.1")
+  {
+    Serial.println("Dostlaismy posta gripper on");
+  }
+  else if(header == "POST /gripper/OFF HTTP/1.1")
+  {
+    Serial.println("Dostlaismy posta gripper off");
+  }
+  else if(header == "POST /Z1 HTTP/1.1")
+  {
+    Serial.println("Dostlaismy posta gripper Z1");
+  }
+  else if(header == "POST /Z2 HTTP/1.1")
+  {
+    Serial.println("Dostlaismy posta gripper Z2");
+  }
+  else if(header == "POST /Z3 HTTP/1.1")
+  {
+    Serial.println("Dostlaismy posta gripper Z3");
+  }
+//pobieramy 8 bajtów z nagłówka, dodajemy znak null i tworzymy obiekt String
+  /*header.getBytes(buffer,COMMAND_SIZE+1);
+  buffer[COMMAND_SIZE] = '\0';
+  String str = String((char*)buffer);
+  Serial.println(str);
+  if(str == "POST")
+  {
+      Serial.println("\n dostalismy posta");
+      if(header.indexOf("/"))
+      {
+        Serial.println("gripper on");
+      }
+  }
+  else if(str == "GET ")
+  {
+      Serial.println("\n dostalismy geta");
+  }*/
 }
